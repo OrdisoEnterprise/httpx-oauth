@@ -268,6 +268,24 @@ class BaseOAuth2(Generic[T]):
 
         return f"{self.authorize_endpoint}?{urlencode(params)}"
 
+    async def verify_token(
+        self, id_token: str
+    ) -> Optional["dict[str, Any]"]:
+        """
+        Validates the token provided by the authentication service.
+
+        Args:
+            token: The token to validate.
+
+        Returns:
+            The token information if valid, None otherwise.
+
+        Raises:
+            OAuth2RequestError: An error occurred while validating the token.
+        """
+        raise NotImplementedError()
+
+
     async def get_access_token(
         self, code: str, redirect_uri: str, code_verifier: Optional[str] = None
     ) -> OAuth2Token:

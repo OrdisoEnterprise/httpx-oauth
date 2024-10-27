@@ -1,7 +1,10 @@
 from typing import Any, Literal, Optional, TypedDict, cast
 
-from httpx_oauth.exceptions import GetIdEmailError
+from httpx_oauth.exceptions import GetIdEmailError, VerifyTokenError
 from httpx_oauth.oauth2 import BaseOAuth2
+
+from google.oauth2 import id_token
+from google.auth.transport import requests
 
 AUTHORIZE_ENDPOINT = "https://accounts.google.com/o/oauth2/v2/auth"
 ACCESS_TOKEN_ENDPOINT = "https://oauth2.googleapis.com/token"
@@ -64,6 +67,37 @@ class GoogleOAuth2(BaseOAuth2[GoogleOAuth2AuthorizeParams]):
             token_endpoint_auth_method="client_secret_post",
             revocation_endpoint_auth_method="client_secret_post",
         )
+
+    async def verify_token(self, id_token):
+        # TODO: Is this the correct way to verify the token?
+        url = f"https://oauth2.googleapis.com/tokeninfo?id_token={id_token}"
+
+        async with self.get_httpx_client() as client:
+            response = await client.get(url)
+            if response.status_code != 200:
+                raise VerifyTokenError(response=response)
+
+            data = cast(dict[str, Any], response.json())
+
+            # TODO: Remove this when the response is standardized
+            # {
+            #     "name": data["name"],
+            #     "family_name": data["family_name"],
+            #     "given_name": data["given_name"],
+            #     "picture": data["picture"],
+            #     "email": user_email,
+            #     "email_verified": data["email_verified"],
+            #     "exp": data["exp"],
+            #     "iat": data["iat"],
+            #     "locale": data["locale"],
+            #     "sub": data["sub"],
+            # }
+
+            account_id = data["sub"]
+            account_email = data["email"]
+            expires_at = data["exp"]
+
+            return account_id, account_email, expires_at
 
     async def get_id_email(self, token: str) -> tuple[str, Optional[str]]:
         async with self.get_httpx_client() as client:

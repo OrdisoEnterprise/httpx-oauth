@@ -23,3 +23,14 @@ class GetIdEmailError(HTTPXOAuthError):
     ) -> None:
         self.response = response
         super().__init__(message)
+
+class VerifyTokenError(HTTPXOAuthError):
+    """Error raised when an invalid token is provided."""
+
+    def __init__(
+            self,
+            message: str = "Error while verifying token.",
+            response: Union[httpx.Response, None] = None
+            ) -> None:
+        self.response = response
+        super().__init__(message)
