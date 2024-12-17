@@ -95,7 +95,7 @@ class GoogleOAuth2(BaseOAuth2[GoogleOAuth2AuthorizeParams]):
 
             account_id = data["sub"]
             account_email = data["email"]
-            expires_at = data["exp"]
+            expires_at = int(data["exp"])
 
             return account_id, account_email, expires_at
 
